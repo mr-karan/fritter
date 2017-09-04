@@ -9,6 +9,6 @@ Add a `config.json` in your working directory. See the example format.
 
 `fritter <name of friend>`
 
-[![asciicast](https://asciinema.org/a/136295.png)](https://asciinema.org/a/136295)
+[![asciicast](https://asciinema.org/a/136299.png)](https://asciinema.org/a/136299)
 
 Made with ❤️ by [@mrkaran_](https://twitter.com/@mrkaran_)
