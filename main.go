@@ -1,64 +1,78 @@
 package main
 
 import "fmt"
-
 import "time"
 import "os"
 import "encoding/json"
 import "log"
 import "io/ioutil"
+import "github.com/fatih/color"
 
-var CONFIG string = "config.json"
+var CONFIGPATH string = "config.json"
 
 type CountryMap struct {
 	Name    string `json:"name"`
 	Country string `json:"country"`
 }
 
-// Can use []CountryMap also, but interface {}
-// makes `toJson`` a generic function to convert
-// any object to a JSON.
-func toMap(countryMap []CountryMap) map[string]string {
-	// Build a config map:
-	confMap := map[string]string{}
-	for _, v := range countryMap {
-		confMap[v.Name] = v.Country
+func toMap(nameCountryJson []CountryMap) map[string]string {
+	// Build a config map from JSON:
+	nameCountryMap := map[string]string{}
+	for _, v := range nameCountryJson {
+		nameCountryMap[v.Name] = v.Country
 	}
-	return confMap
+	return nameCountryMap
 }
 
 func LoadConfig() []CountryMap {
-	configFile, err := ioutil.ReadFile(CONFIG)
+	// Load JSON Config from a file
+	configFile, err := ioutil.ReadFile(CONFIGPATH)
 	if err != nil {
-		log.Fatal("opening config file", err.Error())
+		log.Fatal("Error opening config file", err.Error())
 		os.Exit(1)
 	}
 
-	var country_map []CountryMap
-	json.Unmarshal(configFile, &country_map)
-	return country_map
+	var nameCountryJson []CountryMap
+	json.Unmarshal(configFile, &nameCountryJson)
+	return nameCountryJson
 }
 
-func checkCountry(name string, confMap map[string]string) string {
-	// And then to find values by key:
-	/*if v, ok := confMap[name]; ok {
-		fmt.Println("found")
-	}
-	*/
-	return confMap[name]
+func getCountry(name string, nameCountryMap map[string]string) string {
+	return nameCountryMap[name]
 }
 
-func getTimeZone(loc string) time.Time{
-	location, _ := time.LoadLocation(loc)	
+func getTimeZone(loc string) time.Time {
+	location, _ := time.LoadLocation(loc)
 	now := time.Now().In(location)
 	return now
-	
+}
+
+func checkDayNight(now time.Time) string {
+	hour := now.Hour()
+	if hour >= 23 || hour <= 7 {
+		return "night"
+	}
+	return "day"
 }
 
 func main() {
-	countryMap := LoadConfig()
-	confmap := toMap(countryMap)
-	friend:= checkCountry("Karthika", confmap)
-	fmt.Println(getTimeZone(friend))
+	nameCountryJson := LoadConfig()
+	confmap := toMap(nameCountryJson)
+	var friendName string
+	if len(os.Args) > 1 {
+		friendName = os.Args[1]
+	} else {
+		os.Exit(1)
+	}
+	friend := getCountry(friendName, confmap)
+	now := getTimeZone(friend)
+	formattedNow := now.Format("15:04")
+	output := fmt.Sprintf("It is %s ", formattedNow)
+	if checkDayNight(now) == "day" {
+		emoji := "🌞"
+		color.Yellow(output + emoji)
+	} else {
+		emoji := "🌚"
+		color.Cyan(output + emoji)
+	}
 }
-
